@@ -123,7 +123,7 @@ class Input extends React.Component {
 
 class Weather extends React.Component {
   componentWillUnmount() {
-    console.log("Weather will unmount")
+    console.log("Weather will unmount");
   }
   render() {
     const { weather, location } = this.props;
