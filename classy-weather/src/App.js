@@ -33,18 +33,14 @@ function formatDay(dateStr) {
 }
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      location: "",
-      isLoading: false,
-      displayLocation: "",
-      weather: {},
-    };
-    this.fetchWeather = this.fetchWeather.bind(this);
-  }
+  state = {
+    location: "",
+    isLoading: false,
+    displayLocation: "",
+    weather: {},
+  };
 
-  async fetchWeather() {
+  fetchWeather = async () => {
     try {
       // 1) Getting location (geocoding)
       this.setState({ isLoading: true });
@@ -73,20 +69,30 @@ class App extends React.Component {
     } finally {
       this.setState({ isLoading: false });
     }
+  };
+
+  setLocation = (e) => this.setState({ location: e.target.value });
+
+  componentDidMount() {
+    this.fetchWeather();
+    this.setState({ location: localStorage.getItem("location" || "") });
   }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.location !== prevState.location) {
+      this.fetchWeather();
+    }
+    localStorage.setItem("location", this.state.location);
+  }
+
   render() {
     return (
       <div className="app">
         <h1>Classy Weather</h1>
-        <div>
-          <input
-            type="text"
-            placeholder="Search from location..."
-            value={this.state.location}
-            onChange={(e) => this.setState({ location: e.target.value })}
-          ></input>
-        </div>
-        <button onClick={this.fetchWeather}>Get weather</button>
+        <Input
+          location={this.state.location}
+          onChangeLocation={this.setLocation}
+        ></Input>
         {this.state.isLoading && <p>Loading....</p>}
         {this.state.weather.weathercode && (
           <Weather
@@ -100,7 +106,25 @@ class App extends React.Component {
 }
 export default App;
 
+class Input extends React.Component {
+  render() {
+    return (
+      <div>
+        <input
+          type="text"
+          placeholder="Search from location..."
+          value={this.props.location}
+          onChange={this.props.onChangeLocation}
+        ></input>
+      </div>
+    );
+  }
+}
+
 class Weather extends React.Component {
+  componentWillUnmount() {
+    console.log("Weather will unmount")
+  }
   render() {
     const { weather, location } = this.props;
     return (
@@ -114,7 +138,7 @@ class Weather extends React.Component {
               max={weather.temperature_2m_max.at(i)}
               min={weather.temperature_2m_min.at(i)}
               code={weather.weathercode.at(i)}
-              isToday={i===0}
+              isToday={i === 0}
             ></Day>
           ))}
         </ul>
@@ -125,11 +149,11 @@ class Weather extends React.Component {
 
 class Day extends React.Component {
   render() {
-    const { date, max, min, code,isToday } = this.props;
+    const { date, max, min, code, isToday } = this.props;
     return (
       <li className="day">
         <span>{getWeatherIcon(code)}</span>
-        <p>{isToday?"Today":formatDay(date)}</p>
+        <p>{isToday ? "Today" : formatDay(date)}</p>
         <p>
           {Math.floor(min)}&deg; &mdash; {Math.ceil(max)}&deg;
         </p>
